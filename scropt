@@ -1,0 +1,185 @@
+-- you can change or add more futures but no deleted me in credits
+
+local success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+
+local Window = Rayfield:CreateWindow({
+   Name = "One Punch Sim X | Ghost Hub",
+   LoadingTitle = "loading...",
+   LoadingSubtitle = "by ExE",
+   ConfigurationSaving = {Enabled = false}
+})
+
+getgenv().AutoFarm = false
+getgenv().SelectedNPC = "" 
+getgenv().WaitTime = 2
+getgenv().Distance = 4
+
+getgenv().AutoOpen = false
+getgenv().SelectedCrate = ""
+
+local Player = game.Players.LocalPlayer
+
+local function GetAllDummyNames()
+    local names = {}
+    local dummysFolder = workspace:FindFirstChild("Dummys")
+    if dummysFolder then
+        for _, zone in pairs(dummysFolder:GetChildren()) do
+            if zone:IsA("Folder") or zone:IsA("Model") then
+                for _, npc in pairs(zone:GetChildren()) do
+                    if npc:IsA("Model") and npc:FindFirstChild("Humanoid") then
+                        if not table.find(names, npc.Name) then
+                            table.insert(names, npc.Name)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    table.sort(names)
+    return names
+end
+
+local function GetCrateList()
+    local crates = {}
+    local crateFolder = workspace:FindFirstChild("Crates")
+    if crateFolder then
+        for _, v in pairs(crateFolder:GetChildren()) do
+            table.insert(crates, v.Name)
+        end
+    end
+    return (#crates > 0 and crates) or {"Crates не найдены"}
+end
+
+local MainTab = Window:CreateTab("Фарм Dummy", 4483362458)
+
+local Dropdown = MainTab:CreateDropdown({
+   Name = "Choose Dummy",
+   Options = GetAllDummyNames(),
+   CurrentValue = "",
+   Flag = "DummyDrop",
+   Callback = function(Option)
+      getgenv().SelectedNPC = (type(Option) == "table" and Option[1]) or Option
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "🔄 Reload",
+   Callback = function()
+      Dropdown:Set(GetAllDummyNames())
+   end,
+})
+
+MainTab:CreateSlider({
+   Name = "Time TP",
+   Range = {1, 10},
+   Increment = 0.1,
+   CurrentValue = 2,
+   Suffix = "сек",
+   Callback = function(v) getgenv().WaitTime = v end
+})
+
+MainTab:CreateToggle({
+   Name = "Start Autofarm",
+   CurrentValue = false,
+   Flag = "FarmToggle",
+   Callback = function(Value)
+      getgenv().AutoFarm = Value
+      if Value then
+          task.spawn(function()
+              while getgenv().AutoFarm do
+                  local targets = {}
+                  local dummys = workspace:FindFirstChild("Dummys")
+                  if dummys then
+                      -- ТВОЯ ИСХОДНАЯ ЛОГИКА
+                      for _, zone in pairs(dummys:GetChildren()) do
+                          for _, npc in pairs(zone:GetChildren()) do
+                              if npc.Name == getgenv().SelectedNPC and npc:FindFirstChild("HumanoidRootPart") then
+                                  table.insert(targets, npc)
+                              end
+                          end
+                      end
+                  end
+
+                  if #targets > 0 then
+                      for i = 1, #targets do
+                          if not getgenv().AutoFarm then break end
+                          local current = targets[i]
+                          local timer = 0
+                          while timer < getgenv().WaitTime and getgenv().AutoFarm do
+                              if current and current:FindFirstChild("HumanoidRootPart") then
+                                  Player.Character.HumanoidRootPart.CFrame = current.HumanoidRootPart.CFrame * CFrame.new(0, 0, getgenv().Distance)
+                                  game:GetService("VirtualUser"):CaptureController()
+                                  game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
+                              end
+                              local dt = task.wait(0.2)
+                              timer = timer + dt
+                          end
+                      end
+                  else
+                      task.wait(1)
+                  end
+              end
+          end)
+      end
+   end,
+})
+
+MainTab:CreateSlider({
+   Name = "Dist",
+   Range = {1, 15},
+   Increment = 0.5,
+   CurrentValue = 5,
+   Callback = function(v) getgenv().Distance = v end
+})
+
+local EggTab = Window:CreateTab("Авто открытие", 4483362458)
+
+local CrateDrop = EggTab:CreateDropdown({
+   Name = "Choose Crate(Dont work now)",
+   Options = GetCrateList(),
+   CurrentValue = "",
+   Callback = function(Option)
+      getgenv().SelectedCrate = (type(Option) == "table" and Option[1]) or Option
+   end,
+})
+
+EggTab:CreateToggle({
+   Name = "Open",
+   CurrentValue = false,
+   Callback = function(Value)
+      getgenv().AutoOpen = Value
+      if Value then
+         task.spawn(function()
+            local targetRemote = nil
+            for _, v in pairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
+                if (v:IsA("RemoteEvent") or v:IsA("RemoteFunction")) and (v.Name:find("Crate") or v.Name:find("Buy") or v.Name:find("Egg")) then
+                    targetRemote = v
+                    break
+                end
+            end
+
+            while getgenv().AutoOpen do
+               if targetRemote and getgenv().SelectedCrate ~= "" then
+                  pcall(function()
+                     if targetRemote:IsA("RemoteFunction") then
+                        targetRemote:InvokeServer(getgenv().SelectedCrate, "Single")
+                     else
+                        targetRemote:FireServer(getgenv().SelectedCrate, "Single")
+                     end
+                  end)
+               end
+               task.wait(1.5)
+            end
+         end)
+      end
+   end,
+})
+
+-- Anti-AFK
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+   game:GetService("VirtualUser"):Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+   task.wait(1)
+   game:GetService("VirtualUser"):Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
