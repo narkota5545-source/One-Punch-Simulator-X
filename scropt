@@ -52,7 +52,7 @@ local function GetCrateList()
     return (#crates > 0 and crates) or {"Crates не найдены"}
 end
 
-local MainTab = Window:CreateTab("Фарм Dummy", 4483362458)
+local MainTab = Window:CreateTab("Auto Farm", 4483362458)
 
 local Dropdown = MainTab:CreateDropdown({
    Name = "Choose Dummy",
@@ -92,7 +92,6 @@ MainTab:CreateToggle({
                   local targets = {}
                   local dummys = workspace:FindFirstChild("Dummys")
                   if dummys then
-                      -- ТВОЯ ИСХОДНАЯ ЛОГИКА
                       for _, zone in pairs(dummys:GetChildren()) do
                           for _, npc in pairs(zone:GetChildren()) do
                               if npc.Name == getgenv().SelectedNPC and npc:FindFirstChild("HumanoidRootPart") then
@@ -134,7 +133,7 @@ MainTab:CreateSlider({
    Callback = function(v) getgenv().Distance = v end
 })
 
-local EggTab = Window:CreateTab("Авто открытие", 4483362458)
+local EggTab = Window:CreateTab("Open Crates", 4483362458)
 
 local CrateDrop = EggTab:CreateDropdown({
    Name = "Choose Crate(Dont work now)",
