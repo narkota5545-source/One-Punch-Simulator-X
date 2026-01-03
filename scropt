@@ -65,9 +65,9 @@ local Dropdown = MainTab:CreateDropdown({
 })
 
 MainTab:CreateButton({
-   Name = "🔄 Reload",
+   Name = "🔄 Refresh",
    Callback = function()
-      Dropdown:Set(GetAllDummyNames())
+      Dropdown:Refresh(GetAllDummyNames(), true) 
    end,
 })
 
@@ -107,13 +107,14 @@ MainTab:CreateToggle({
                           local current = targets[i]
                           local timer = 0
                           while timer < getgenv().WaitTime and getgenv().AutoFarm do
-                              if current and current:FindFirstChild("HumanoidRootPart") then
+                              if current and current:FindFirstChild("HumanoidRootPart") and current:FindFirstChild("Humanoid") and current.Humanoid.Health > 0 then
                                   Player.Character.HumanoidRootPart.CFrame = current.HumanoidRootPart.CFrame * CFrame.new(0, 0, getgenv().Distance)
                                   game:GetService("VirtualUser"):CaptureController()
                                   game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
+                              else
+                                  break
                               end
-                              local dt = task.wait(0.2)
-                              timer = timer + dt
+                              timer = timer + task.wait(0.2)
                           end
                       end
                   else
@@ -136,7 +137,7 @@ MainTab:CreateSlider({
 local EggTab = Window:CreateTab("Open Crates", 4483362458)
 
 local CrateDrop = EggTab:CreateDropdown({
-   Name = "Choose Crate(Dont work now)",
+   Name = "Choose Crate",
    Options = GetCrateList(),
    CurrentValue = "",
    Callback = function(Option)
