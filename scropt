@@ -73,10 +73,10 @@ MainTab:CreateButton({
 
 MainTab:CreateSlider({
    Name = "Time TP",
-   Range = {1, 10},
+   Range = {0.1, 10},
    Increment = 0.1,
    CurrentValue = 2,
-   Suffix = "сек",
+   Suffix = "sec",
    Callback = function(v) getgenv().WaitTime = v end
 })
 
